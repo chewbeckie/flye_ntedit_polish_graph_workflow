@@ -109,12 +109,20 @@ process ntedit_polish{
         file("*.tsv")
         file("*.vcf")
         file("*.bf")
+        file("*.gfa")
 
-    shell:
+/*    shell:
         '''
         awk '/^S/{print ">"$2 "\\n"$3}' !{graph} | fold > !{sampleId}_assembly.fa
         nthits -c 1 --outbloom -p solidBF_!{sampleId} -b 36 -k 40 -t 16 !{tread1} !{tread2}
         ntedit -m 1 -f !{sampleId}_assembly.fa -r solidBF_!{sampleId}_k40.bf -b !{sampleId}
         '''
-
+*/
+    script:
+      """
+      flye_gfa_to_fasta_for_polishing.py $graph ${sampleId}_assembly.fa
+      nthits -c 1 --outbloom -p solidBF_${sampleId} -b 36 -k 40 -t 16 $tread1 $tread2
+      ntedit -m 1 -f ${sampleId}_assembly.fa -r solidBF_${sampleId}_k40.bf -b ${sampleId}_assembly
+      flye_polished_fa_to_gfa.py $graph ${sampleId}_assembly_edited.fa polished_${sampleId}.gfa
+      """
 }
